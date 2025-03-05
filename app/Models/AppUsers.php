@@ -13,7 +13,7 @@ class AppUsers extends Authenticatable implements JWTSubject
     use HasFactory;
 
     public $timestamps = false;
-    protected $table = 'appUser';
+    protected $table = 'appuser';
     protected $fillable = [
         'name',
         'email',
