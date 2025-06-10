@@ -15,9 +15,14 @@ class AppUsers extends Authenticatable implements JWTSubject
     public $timestamps = false;
     protected $table = 'appuser';
     protected $fillable = [
+        'id',
         'name',
         'email',
-        'password'
+        'password',
+        'user_type',
+        'gender',
+        'rating',
+        'rating_count'
     ];
 
 
@@ -29,5 +34,10 @@ class AppUsers extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [];
+    }
+
+    public function userVerificationDocuments()
+    {
+        return $this->hasMany(\App\Models\UserVerification::class, 'user_id');
     }
 }

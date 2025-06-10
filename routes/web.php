@@ -40,9 +40,10 @@ Route::middleware(['auth', 'check_permissions'])->group(function () {
     Route::get('/categories', [viewController::class, 'categories'])->name('category_list');
     // product attributes
     Route::get('/add-product-attributes', [viewController::class, 'addProductAttributes'])->name('add_product_attributes');
-
-
-
+    Route::get('/verify-app-users', [viewController::class, 'verifyAppUsers'])->name('verify_app_user');
+    Route::get('/verify-vehicles', [viewController::class, 'verifyVehicles'])->name('verify_vehicle');
+    Route::get('/ride-offers', [viewController::class, 'rideOffers'])->name('ride_offers');
+    Route::get('/ride-requests', [viewController::class, 'rideRequests'])->name('ride_requests');
 
     /*
     |--------------------------------------------------------------------------
@@ -92,6 +93,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/get-category-data',         [AjaxController::class,'CategoryList'])->name('get_category_list');
     Route::delete('/delete-category/{id}',      [AjaxController::class,'CategoryDelete'])->name('delete_category');
 
+    // New routes for viewing individual records
+    Route::get('/admin/ride-offer/{id}', [viewController::class, 'viewRideOffer'])->name('admin.viewRideOffer');
+    Route::get('/admin/ride-request/{id}', [viewController::class, 'viewRideRequest'])->name('admin.viewRideRequest');
+
+    Route::get('/admin/ride-location/{ride_id}', [AjaxController::class, 'getRideLocations']);
+
 
     /*
     |--------------------------------------------------------------------------
@@ -105,7 +112,6 @@ Route::middleware(['auth'])->group(function () {
 
 
 
-/*chandima start*/
 Route::middleware(['auth', 'check_permissions'])->group(function () {
     /*
     |--------------------------------------------------------------------------
@@ -152,8 +158,10 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::post('/UpdateUser', [ActionController::class, 'userUpdate'])->name('user_update');
     Route::post('/UpdateUserRole', [ActionController::class, 'updateUserRole'])->name('user_role_update');
+    Route::post('/admin/verify-document/{id}', [ActionController::class, 'review'])->name('admin.verification.review');
+    Route::post('/admin/vehicles/review/{id}', [ActionController::class, 'vehiclereview'])->name('admin.vehicles.review');
+
 });
-/*chandima end*/
 
 
 require __DIR__ . '/auth.php';

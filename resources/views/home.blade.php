@@ -21,32 +21,33 @@
         <div class="container-fluid">
             <div class="row">
 
-                <div class="col-md-4">
-                    <div class="card bg-info">
-                        <div class="card-body">
-                            <h5 class="card-title">Total Users</h5>
-                            <p class="card-text">1,245</p>
-                        </div>
-                    </div>
-                </div>
+<div class="col-md-4">
+    <div class="card bg-info">
+        <div class="card-body">
+            <h5 class="card-title">Total Users</h5>
+            <p class="card-text">{{ $totalUsers }}</p>
+        </div>
+    </div>
+</div>
 
-                <div class="col-md-4">
-                    <div class="card bg-success">
-                        <div class="card-body">
-                            <h5 class="card-title">Pending Driver Confirmations</h5>
-                            <p class="card-text">100</p>
-                        </div>
-                    </div>
-                </div>
+<div class="col-md-4">
+    <div class="card bg-success">
+        <div class="card-body">
+            <h5 class="card-title">Pending Driver Confirmations</h5>
+            <p class="card-text">{{ $pendingDrivers }}</p>
+        </div>
+    </div>
+</div>
 
-                <div class="col-md-4">
-                    <div class="card bg-warning">
-                        <div class="card-body">
-                            <h5 class="card-title">Total Rides (Week)</h5>
-                            <p class="card-text">500</p>
-                        </div>
-                    </div>
-                </div>
+<div class="col-md-4">
+    <div class="card bg-warning">
+        <div class="card-body">
+            <h5 class="card-title">Total Rides</h5>
+            <p class="card-text">{{ $weeklyRides }}</p>
+        </div>
+    </div>
+</div>
+
             </div>
         </div>
 

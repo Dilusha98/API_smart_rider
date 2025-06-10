@@ -309,6 +309,10 @@
                     'user_role_list',
                     'create_user',
                     'edit_user',
+                    'verify_app_user',
+                    'verify_vehicle',
+                    'ride_offers',
+                    'ride_requests',
                 );
 
                 $pos_permissions = array(
@@ -376,6 +380,8 @@
 
             {{-- ride share --}}
 
+            @if (!empty(array_intersect($permission_titles, $user_permissions)))
+
             <li class="nav-item">
                 <a href="#" class="nav-link">
                   <i class="nav-icon fas fa-car"></i>
@@ -386,37 +392,46 @@
                 </a>
                 <ul class="nav nav-treeview">
 
-                    <li class="nav-item">
-                      <a href="#" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p>View Rides</p>
-                      </a>
-                    </li>
+                    @if (in_array('ride_offers',$permission_titles))
+                        <li class="nav-item">
+                        <a href="/ride-offers" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Ride Offers</p>
+                        </a>
+                        </li>
+                    @endif
 
-                    <li class="nav-item">
-                      <a href="#" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p>Complaints</p>
-                      </a>
-                    </li>
+                    @if (in_array('ride_requests',$permission_titles))
+                        <li class="nav-item">
+                        <a href="/ride-requests" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Ride Requests</p>
+                        </a>
+                        </li>
+                    @endif
 
-                    <li class="nav-item">
-                      <a href="#" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p>Approve Drivers</p>
-                      </a>
-                    </li>
+                    @if (in_array('verify_app_user',$permission_titles))
+                        <li class="nav-item">
+                        <a href="/verify-app-users" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Verify App Users</p>
+                        </a>
+                        </li>
+                    @endif
 
-                    <li class="nav-item">
-                      <a href="#" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p>Approve Users</p>
-                      </a>
-                    </li>
-
+                    @if (in_array('verify_vehicle',$permission_titles))
+                        <li class="nav-item">
+                        <a href="/verify-vehicles" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Verify Vehicles</p>
+                        </a>
+                        </li>
+                    @endif
 
                 </ul>
               </li>
+
+            @endif
 
 
 
@@ -472,41 +487,6 @@
               </ul>
             </li>
           @endif
-
-
-
-          <li class="nav-item">
-            <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-file-alt"></i>
-              <p>
-                  Reports
-                <i class="fas fa-angle-left right"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-
-                <li class="nav-item">
-                  <a href="#" class="nav-link">
-                    <i class="far fa-circle nav-icon"></i>
-                    <p>Vehicle Category wise</p>
-                  </a>
-                </li>
-
-                <li class="nav-item">
-                  <a href="#" class="nav-link">
-                    <i class="far fa-circle nav-icon"></i>
-                    <p>District Wise</p>
-                  </a>
-                </li>
-
-                <li class="nav-item">
-                  <a href="#" class="nav-link">
-                    <i class="far fa-circle nav-icon"></i>
-                    <p>User Wise</p>
-                  </a>
-                </li>
-
-                </li>
 
             </ul>
           </li>

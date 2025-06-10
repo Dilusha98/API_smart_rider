@@ -6,7 +6,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
 use App\Models\User;
 use App\Models\raffel;
+use App\Models\AppUsers;
+use App\Models\VehicleModel;
+use App\Models\RideRequestModel;
+use App\Models\RideOffers;
+use App\Models\Ride;
 use Auth;
+use Carbon\Carbon;
 
 class viewController extends DataController
 {
@@ -75,10 +81,19 @@ class viewController extends DataController
     */
     public function index()
     {
-        $data = array(
-            'title'                 => 'Dashboard',
-            'view'                  => 'home',
-        );
+        $totalUsers = AppUsers::count();
+
+        $pendingDriverConfirmations = AppUsers::count();
+
+        $weekRides = Ride::count();
+
+        $data = [
+            'title' => 'Dashboard',
+            'view' => 'home',
+            'totalUsers' => $totalUsers,
+            'pendingDrivers' => $pendingDriverConfirmations,
+            'weeklyRides' => $weekRides,
+        ];
 
         return $this->default($data);
     }
@@ -270,4 +285,197 @@ class viewController extends DataController
 
         return $this->default($data);
     }
+
+    public function verifyAppUsers(Request $request)
+    {
+        $users = AppUsers::whereHas('userVerificationDocuments')
+            ->with(['userVerificationDocuments' => function($query) {
+                $query->orderBy('status', 'asc')
+                    ->orderBy('id', 'desc');
+            }])
+            ->get();
+
+        return $this->default([
+            'title'  => 'Verify App User',
+            'view'   => 'verifyAppUser',
+            'users'  => $users,
+        ]);
+
+        return $this->default($data);
+    }
+
+    public function verifyVehicles(Request $request)
+    {
+        $vehicles = VehicleModel::with('images')->orderBy('status')->get();
+
+        return $this->default([
+            'title'  => 'Verify Vehicles',
+            'view'   => 'verifyVehicles',
+            'vehicles' => $vehicles,
+        ]);
+
+        return $this->default($data);
+    }
+
+
+public function rideOffers(Request $request)
+{
+    if ($request->ajax()) {
+        $draw = $request->get('draw');
+        $start = $request->get('start');
+        $length = $request->get('length');
+        $search = $request->get('search')['value'];
+
+        $query = RideOffers::with(['ride.user', 'request', 'passengerUser']);
+
+        // Search functionality
+        if (!empty($search)) {
+            $query->whereHas('ride.user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            })
+            ->orWhereHas('passengerUser', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            })
+            ->orWhereHas('request', function($q) use ($search) {
+                $q->where('pickup_place', 'like', "%{$search}%")
+                  ->orWhere('drop_place', 'like', "%{$search}%");
+            });
+        }
+
+        $totalRecords = RideOffers::count();
+        $totalDisplay = $query->count();
+
+        $offers = $query->skip($start)->take($length)->orderBy('id', 'desc')->get();
+
+        $data = [];
+        foreach ($offers as $offer) {
+            // Status mapping for offers
+            $statusText = '';
+            switch ($offer->status) {
+                case 0: $statusText = '<span class="badge badge-warning">Pending</span>'; break;
+                case 1: $statusText = '<span class="badge badge-info">Accepted</span>'; break;
+                case 2: $statusText = '<span class="badge badge-success">Completed</span>'; break;
+                default: $statusText = '<span class="badge badge-secondary">Unknown</span>';
+            }
+
+            $data[] = [
+                'id' => $offer->id,
+                'driver_name' => $offer->ride && $offer->ride->user ? $offer->ride->user->name : 'N/A',
+                'passenger_name' => $offer->passengerUser ? $offer->passengerUser->name : 'N/A',
+                'ride_date' => $offer->ride ? date('M d, Y', strtotime($offer->ride->date)) : 'N/A',
+                'pickup_place' => $offer->request ? $offer->request->pickup_place : 'N/A',
+                'drop_place' => $offer->request ? $offer->request->drop_place : 'N/A',
+                'price' => 'LKR ' . number_format($offer->price, 2),
+                'status_text' => $statusText,
+                'action' => '<button class="btn btn-info btn-sm view-offer" data-id="'.$offer->id.'">
+                                <i class="fa fa-eye"></i> View
+                            </button>'
+            ];
+        }
+
+        return response()->json([
+            'draw' => intval($draw),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $totalDisplay,
+            'data' => $data
+        ]);
+    }
+
+    return $this->default([
+        'title' => 'Ride Offers',
+        'view' => 'rideOffers',
+    ]);
+}
+
+public function rideRequests(Request $request)
+{
+    if ($request->ajax()) {
+        $draw = $request->get('draw');
+        $start = $request->get('start');
+        $length = $request->get('length');
+        $search = $request->get('search')['value'];
+
+        $query = RideRequestModel::with(['ride.user']);
+
+        if (!empty($search)) {
+            $query->where('pickup_place', 'like', "%{$search}%")
+                  ->orWhere('drop_place', 'like', "%{$search}%")
+                  ->orWhereHas('ride.user', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+        }
+
+        $totalRecords = RideRequestModel::count();
+        $totalDisplay = $query->count();
+
+        $requests = $query->skip($start)->take($length)->orderBy('id', 'desc')->get();
+
+        $data = [];
+        foreach ($requests as $req) {
+
+            $currentDate = now()->format('Y-m-d');
+            $actualStatus = $req->status;
+
+            if (($req->status == 0 || $req->status == 1) && $req->date < $currentDate) {
+                $actualStatus = 2;
+            }
+
+            $statusText = '';
+            switch ($actualStatus) {
+                case 0: $statusText = '<span class="badge badge-info">Upcoming</span>'; break;
+                case 1: $statusText = '<span class="badge badge-warning">Ongoing</span>'; break;
+                case 2: $statusText = '<span class="badge badge-success">Completed</span>'; break;
+                default: $statusText = '<span class="badge badge-secondary">Unknown</span>';
+            }
+
+            $data[] = [
+                'id' => $req->id,
+                'user_name' => $req->ride && $req->ride->user ? $req->ride->user->name : 'N/A',
+                'formatted_date' => date('M d, Y', strtotime($req->date)),
+                'formatted_time' => $req->time ? date('h:i A', strtotime($req->time)) : 'N/A',
+                'pickup_place' => $req->pickup_place ?: 'N/A',
+                'drop_place' => $req->drop_place ?: 'N/A',
+                'seats' => $req->seats,
+                'distance' => $req->distance ? number_format($req->distance, 2) . ' km' : 'N/A',
+                'status_text' => $statusText,
+                'action' => '<button class="btn btn-info btn-sm view-request" data-id="'.$req->id.'">
+                                <i class="fa fa-eye"></i> View
+                            </button>'
+            ];
+        }
+
+        return response()->json([
+            'draw' => intval($draw),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $totalDisplay,
+            'data' => $data
+        ]);
+    }
+
+    return $this->default([
+        'title' => 'Ride Requests',
+        'view' => 'rideRequests',
+    ]);
+}
+
+public function viewRideOffer($id)
+{
+    try {
+        $offer = RideOffers::with(['ride.user', 'request', 'passengerUser'])->findOrFail($id);
+        return response()->json($offer);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Offer not found'], 404);
+    }
+}
+
+public function viewRideRequest($id)
+{
+    try {
+        $request = RideRequestModel::with(['ride.user'])->findOrFail($id);
+        return response()->json($request);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Request not found'], 404);
+    }
+}
+
 }

@@ -26,6 +26,7 @@ use App\Models\UserModel;
 use App\Models\SavePermissionModel;
 use App\Models\User;
 use App\Models\category;
+use App\Models\DriverLocation;
 
 class AjaxController extends Controller
 {
@@ -600,11 +601,6 @@ class AjaxController extends Controller
     }
 
 
-
-
-    //|--------------------------------------------------------------------------
-    //| Chandima Start
-    //|--------------------------------------------------------------------------
     /*
     |--------------------------------------------------------------------------
     | get user List
@@ -626,9 +622,17 @@ class AjaxController extends Controller
             ->get();
         return response()->json(['userRoles' => $userRoles]);
     }
-    //|--------------------------------------------------------------------------
-    //| Chandima End
-    //|--------------------------------------------------------------------------
+
+
+
+    public function getRideLocations($ride_id)
+    {
+        $locations = DriverLocation::where('ride_id', $ride_id)
+            ->orderBy('captured_at')
+            ->get(['lat', 'lng', 'captured_at']);
+
+        return response()->json($locations);
+    }
 
 
 }

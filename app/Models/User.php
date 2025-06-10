@@ -50,4 +50,5 @@ class User extends Authenticatable
         return $this->hasMany(Brand::class, 'created_by');
     }
 
+
 }

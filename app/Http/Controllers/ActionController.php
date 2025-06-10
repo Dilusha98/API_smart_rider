@@ -23,6 +23,8 @@ use App\Models\SavePermissionModel;
 use App\Models\User;
 use App\Models\ProductAttributeValueMap;
 use App\Models\ProductAttribute;
+use App\Models\UserVerification;
+use App\Models\VehicleModel;
 
 
 class ActionController extends Controller
@@ -36,10 +38,6 @@ class ActionController extends Controller
     private function createLogInfoFile($status,$message){
         Log::info('success : '.$status.', message : '.$message);
     }
-
-    //|--------------------------------------------------------------------------
-    //| Dilusha Start
-    //|--------------------------------------------------------------------------
 
 
     /*
@@ -97,14 +95,6 @@ class ActionController extends Controller
         }
     }
 
-
-    //|--------------------------------------------------------------------------
-    //| Dilusha End
-    //|-
-
-    //|--------------------------------------------------------------------------
-    //| Chandima Start
-    //|--------------------------------------------------------------------------
     /*
     |--------------------------------------------------------------------------
     | User Update
@@ -198,7 +188,41 @@ class ActionController extends Controller
             return Redirect()->back()->with(['success' => false, 'message' => 'An error occurred while updating the user role. Please try again later.!']);
         }
     }
-    //|--------------------------------------------------------------------------
-    //| Chandima End
-    //|--------------------------------------------------------------------------
+
+    public function review(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:1,2',
+            'admin_note' => 'nullable|string|max:255',
+        ]);
+
+        $doc = UserVerification::findOrFail($id);
+
+        $doc->update([
+            'status' => $request->status,
+            'admin_note' => $request->admin_note,
+            'reviewed_by' => auth()->id(),
+            'reviewed_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Document status updated successfully.');
+    }
+
+
+    public function vehiclereview(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:1,2',
+        ]);
+
+        $vehicle = VehicleModel::findOrFail($id);
+
+        $vehicle->status = $validated['status'];
+        $vehicle->save();
+
+        return redirect()->back()->with('success', 'Vehicle status updated successfully.');
+    }
+
+
+
 }
